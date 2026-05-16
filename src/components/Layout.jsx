@@ -44,7 +44,7 @@ export function Layout() {
                       <img src={user.avatar} alt="Avatar" className="w-full h-full object-cover" />
                     ) : (
                       <span className="font-bold text-accent text-xs">
-                        {user?.username?.substring(0, 2).toUpperCase() || 'CH'}
+                        {user?.username?.substring(0, 2)?.toUpperCase() || 'CH'}
                       </span>
                     )}
                   </div>

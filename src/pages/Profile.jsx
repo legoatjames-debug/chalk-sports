@@ -35,7 +35,7 @@ export function Profile() {
             <img src={user.avatar} alt={user.username} className="w-full h-full object-cover" />
           ) : (
             <span className="text-4xl font-black text-accent">
-              {user?.username?.substring(0, 2).toUpperCase() || 'CH'}
+              {user?.username?.substring(0, 2)?.toUpperCase() || 'CH'}
             </span>
           )}
         </div>
