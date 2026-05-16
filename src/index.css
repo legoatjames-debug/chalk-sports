@@ -1,0 +1,23 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-background text-gray-100 antialiased selection:bg-accent selection:text-white;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display tracking-wide uppercase;
+  }
+}
+
+@layer utilities {
+  .glass {
+    @apply bg-card/80 backdrop-blur-md border border-white/5;
+  }
+  
+  .game-card-hover {
+    @apply transition-all duration-300 hover:-translate-y-1 hover:shadow-[0_8px_30px_rgb(232,0,28,0.15)] hover:border-accent/30;
+  }
+}
