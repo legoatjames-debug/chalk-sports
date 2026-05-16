@@ -1,20 +1,27 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Trophy, Flame, Target, Medal } from 'lucide-react';
 import { cn } from '../lib/utils';
-
-// Mock Leaderboard Data
-const MOCK_LEADERBOARD = Array.from({ length: 50 }).map((_, i) => ({
-  id: `usr_${i}`,
-  rank: i + 1,
-  username: `Player${Math.floor(Math.random() * 9000) + 1000}`,
-  score: Math.floor(Math.random() * 5000) + 1000 - (i * 20),
-  streak: Math.floor(Math.random() * 30),
-  winRate: Math.floor(Math.random() * 40) + 60,
-}));
+import { useAuthStore } from '../store/authStore';
 
 export function Leaderboard() {
   const [filter, setFilter] = useState('All-Time');
   const [gameFilter, setGameFilter] = useState('All Games');
+  const [leaderboardData, setLeaderboardData] = useState([]);
+  const currentUser = useAuthStore(state => state.user);
+
+  useEffect(() => {
+    // Load all human accounts from the registry
+    let users = [];
+    try {
+      users = JSON.parse(localStorage.getItem('chalk_all_users') || '[]');
+    } catch (e) {
+      console.error(e);
+    }
+    
+    // Sort by score or streak (using score as primary)
+    const sorted = users.sort((a, b) => b.score - a.score);
+    setLeaderboardData(sorted);
+  }, [currentUser]);
 
   return (
     <div className="max-w-5xl mx-auto px-4 py-8">
@@ -24,7 +31,7 @@ export function Leaderboard() {
             <Trophy className="w-10 h-10 text-gold" />
             Global Rankings
           </h1>
-          <p className="text-gray-400 mt-2 font-medium">Compete against the community across all daily puzzles.</p>
+          <p className="text-gray-400 mt-2 font-medium">Compete against the community. Only registered players are shown.</p>
         </div>
         
         <div className="flex flex-col gap-3">
@@ -68,37 +75,54 @@ export function Leaderboard() {
               </tr>
             </thead>
             <tbody>
-              {MOCK_LEADERBOARD.slice(0, 20).map((player) => (
-                <tr key={player.id} className="border-b border-white/5 hover:bg-white/5 transition-colors group">
-                  <td className="p-4 text-center">
-                    {player.rank === 1 ? <Medal className="w-6 h-6 text-gold mx-auto" /> :
-                     player.rank === 2 ? <Medal className="w-6 h-6 text-gray-300 mx-auto" /> :
-                     player.rank === 3 ? <Medal className="w-6 h-6 text-amber-700 mx-auto" /> :
-                     <span className="font-display font-bold text-gray-400">{player.rank}</span>}
-                  </td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 rounded-full bg-surface border border-white/10 flex items-center justify-center text-xs font-bold text-accent">
-                        {player.username.substring(0, 2).toUpperCase()}
-                      </div>
-                      <span className="font-bold text-gray-200 group-hover:text-white transition-colors">{player.username}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right font-display font-black text-lg text-white">
-                    {player.score.toLocaleString()}
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-300">
-                      <Flame className="w-4 h-4 text-accent" /> {player.streak}
-                    </div>
-                  </td>
-                  <td className="p-4 text-center">
-                    <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-300">
-                      <Target className="w-4 h-4 text-gray-500" /> {player.winRate}%
-                    </div>
+              {leaderboardData.length === 0 ? (
+                <tr>
+                  <td colSpan="5" className="p-12 text-center text-gray-400">
+                    <h3 className="text-xl font-bold text-white mb-2">No players yet</h3>
+                    <p>Be the first to create an account and top the leaderboard!</p>
                   </td>
                 </tr>
-              ))}
+              ) : (
+                leaderboardData.map((player, index) => {
+                  const rank = index + 1;
+                  const isCurrentUser = currentUser?.username === player.username;
+
+                  return (
+                    <tr key={player.id} className={cn("border-b border-white/5 hover:bg-white/5 transition-colors group", isCurrentUser ? "bg-accent/10" : "")}>
+                      <td className="p-4 text-center">
+                        {rank === 1 ? <Medal className="w-6 h-6 text-gold mx-auto" /> :
+                         rank === 2 ? <Medal className="w-6 h-6 text-gray-300 mx-auto" /> :
+                         rank === 3 ? <Medal className="w-6 h-6 text-amber-700 mx-auto" /> :
+                         <span className="font-display font-bold text-gray-400">{rank}</span>}
+                      </td>
+                      <td className="p-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-8 h-8 rounded-full bg-surface border border-white/10 flex items-center justify-center text-xs font-bold text-accent overflow-hidden">
+                            {player.avatar ? <img src={player.avatar} className="w-full h-full object-cover" alt="" /> : player.username.substring(0, 2).toUpperCase()}
+                          </div>
+                          <span className="font-bold text-gray-200 group-hover:text-white transition-colors flex items-center gap-2">
+                            {player.username}
+                            {isCurrentUser && <span className="text-[10px] bg-accent/20 text-accent px-1.5 py-0.5 rounded uppercase tracking-wider">You</span>}
+                          </span>
+                        </div>
+                      </td>
+                      <td className="p-4 text-right font-display font-black text-lg text-white">
+                        {player.score.toLocaleString()}
+                      </td>
+                      <td className="p-4 text-center">
+                        <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-300">
+                          <Flame className="w-4 h-4 text-accent" /> {player.streak}
+                        </div>
+                      </td>
+                      <td className="p-4 text-center">
+                        <div className="inline-flex items-center gap-1 text-sm font-bold text-gray-300">
+                          <Target className="w-4 h-4 text-gray-500" /> {player.winRate}%
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
