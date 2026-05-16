@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Play } from 'lucide-react';
+import { Play, Flame } from 'lucide-react';
 import { cn } from '../lib/utils';
 
 const TICKER_DATA = [
